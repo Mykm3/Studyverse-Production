@@ -1,0 +1,578 @@
+const express = require('express');
+const router = express.Router();
+const StudyPlan = require('../models/StudyPlan');
+const Note = require('../models/Note');
+const auth = require('../middleware/auth');
+
+// Get all study sessions for the authenticated user
+router.get('/', auth, async (req, res) => {
+  try {
+    console.log('User from request:', req.user);
+    console.log('User ID:', req.user._id);
+
+    // Find or create study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    console.log('Found study plan:', studyPlan);
+
+    if (!studyPlan) {
+      console.log('Creating new study plan for user:', req.user._id);
+      studyPlan = new StudyPlan({
+        userId: req.user._id,
+        title: 'My Study Plan',
+        description: 'Weekly study schedule',
+        weeklyGoal: 20,
+        subjects: [],
+        sessions: []
+      });
+      await studyPlan.save();
+      console.log('New study plan created:', studyPlan);
+    }
+    
+    // Fetch all sessions with their associated documents
+    const sessionsWithDocuments = await Promise.all(studyPlan.sessions.map(async (session) => {
+      // Find documents associated with this session's subject
+      const documents = await Note.find({
+        userId: req.user._id,
+        subject: session.subject
+      }).sort({ createdAt: -1 });
+      
+      // Format document URLs for consistency
+      const formattedDocuments = documents.map(doc => ({
+        id: doc._id,
+        title: doc.title,
+        fileUrl: doc.fileUrl ? doc.fileUrl.replace('http://', 'https://') : null,
+        type: doc.fileUrl ? doc.fileUrl.split('.').pop() : 'unknown'
+      }));
+      
+      // Return session with its associated documents
+      return {
+        ...session.toObject(),
+        documents: formattedDocuments
+      };
+    }));
+    
+    res.json(sessionsWithDocuments);
+  } catch (error) {
+    console.error('Error fetching study sessions:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete all sessions for a specific subject
+router.delete('/subject/:subject', auth, async (req, res) => {
+  try {
+    const subject = decodeURIComponent(req.params.subject);
+    console.log('Attempting to delete all sessions for subject:', subject, 'user:', req.user._id);
+
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      console.log('Study plan not found for user:', req.user._id);
+      return res.status(404).json({ message: 'Study plan not found' });
+    }
+
+    const originalCount = studyPlan.sessions.length;
+    console.log(`Found ${originalCount} total sessions`);
+
+    // Filter out sessions for this subject
+    studyPlan.sessions = studyPlan.sessions.filter(session => session.subject !== subject);
+    const deletedCount = originalCount - studyPlan.sessions.length;
+
+    // Remove subject from subjects list if no sessions remain for it
+    if (deletedCount > 0 && studyPlan.subjects.includes(subject)) {
+      studyPlan.subjects = studyPlan.subjects.filter(s => s !== subject);
+    }
+
+    await studyPlan.save();
+
+    console.log(`Successfully deleted ${deletedCount} sessions for subject "${subject}"`);
+
+    res.json({
+      message: `Successfully deleted ${deletedCount} sessions for subject "${subject}"`,
+      deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting sessions by subject:', error);
+    res.status(500).json({ message: 'Server error', details: error.message });
+  }
+});
+
+// Get a single study session by ID
+router.get('/:sessionId', auth, async (req, res) => {
+  try {
+    const sessionId = req.params.sessionId;
+    
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      return res.status(404).json({ message: 'Study plan not found' });
+    }
+
+    // Find the session by ID
+    const session = studyPlan.sessions.find(
+      session => session._id.toString() === sessionId
+    );
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // Fetch associated documents for the session's subject
+    const documents = await Note.find({
+      userId: req.user._id,
+      subject: session.subject
+    }).sort({ createdAt: -1 });
+
+    // Format document URLs for consistency
+    const formattedDocuments = documents.map(doc => ({
+      id: doc._id,
+      title: doc.title,
+      fileUrl: doc.fileUrl ? doc.fileUrl.replace('http://', 'https://') : null,
+      type: doc.fileUrl ? doc.fileUrl.split('.').pop() : 'unknown'
+    }));
+
+    // Return the session with its associated documents
+    res.json({
+      ...session.toObject(),
+      documents: formattedDocuments
+    });
+  } catch (error) {
+    console.error('Error fetching study session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create a new study session
+router.post('/', auth, async (req, res) => {
+  try {
+    const { subject, startTime, endTime, description, documentId, isAIGenerated } = req.body;
+    
+    // Validate required fields
+    if (!subject || !startTime || !endTime) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Validate dates
+    if (new Date(endTime) <= new Date(startTime)) {
+      return res.status(400).json({ message: 'End time must be after start time' });
+    }
+
+    // Verify that the subject exists in the user's notes
+    const subjectExists = await Note.findOne({ 
+      userId: req.user._id,
+      subject: subject
+    });
+
+    // If optional documentId is provided, verify it belongs to the subject
+    let selectedDocument = null;
+    if (documentId) {
+      selectedDocument = await Note.findOne({
+        _id: documentId,
+        userId: req.user._id,
+        subject: subject
+      });
+
+      if (!selectedDocument) {
+        return res.status(400).json({ message: 'Document not found or does not match subject' });
+      }
+    }
+
+    // Find or create study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      studyPlan = new StudyPlan({
+        userId: req.user._id,
+        title: 'My Study Plan',
+        description: 'Weekly study schedule',
+        weeklyGoal: 20,
+        subjects: [subject],
+        sessions: []
+      });
+    }
+
+    // Add new session
+    const newSession = {
+      subject,
+      startTime,
+      endTime,
+      description,
+      status: 'scheduled',
+      documentId: selectedDocument ? selectedDocument._id : null,
+      isAIGenerated: isAIGenerated || false
+    };
+
+    studyPlan.sessions.push(newSession);
+    
+    // Update subjects list if new subject
+    if (!studyPlan.subjects.includes(subject)) {
+      studyPlan.subjects.push(subject);
+    }
+
+    await studyPlan.save();
+    
+    // Return session with document info if available
+    const sessionResponse = {
+      ...newSession,
+      document: selectedDocument ? {
+        id: selectedDocument._id,
+        title: selectedDocument.title,
+        fileUrl: selectedDocument.fileUrl ? selectedDocument.fileUrl.replace('http://', 'https://') : null,
+        type: selectedDocument.fileUrl ? selectedDocument.fileUrl.split('.').pop() : 'unknown'
+      } : null
+    };
+    
+    res.status(201).json(sessionResponse);
+  } catch (error) {
+    console.error('Error creating study session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update a study session
+router.put('/:sessionId', auth, async (req, res) => {
+  try {
+    const { subject, startTime, endTime, description, documentId, progress } = req.body;
+    const sessionId = req.params.sessionId;
+    
+    console.log('Update session request body:', req.body);
+    console.log('Extracted fields:', { subject, startTime, endTime, description, documentId, progress });
+    
+    // Validate required fields (only if updating fields other than progress)
+    const isOnlyUpdatingProgress = progress !== undefined && 
+      subject === undefined && 
+      startTime === undefined && 
+      endTime === undefined && 
+      description === undefined && 
+      documentId === undefined;
+    
+    console.log('Is only updating progress:', isOnlyUpdatingProgress);
+    console.log('Validation check:', !isOnlyUpdatingProgress && (!subject || !startTime || !endTime));
+    
+    if (!isOnlyUpdatingProgress && (!subject || !startTime || !endTime)) {
+      console.log('Validation failed - missing required fields');
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Validate dates (only if updating times)
+    if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
+      return res.status(400).json({ message: 'End time must be after start time' });
+    }
+
+    // If documentId is provided, verify it belongs to the subject
+    let selectedDocument = null;
+    if (documentId) {
+      selectedDocument = await Note.findOne({
+        _id: documentId,
+        userId: req.user._id,
+        subject: subject
+      });
+
+      if (!selectedDocument) {
+        return res.status(400).json({ message: 'Document not found or does not match subject' });
+      }
+    }
+
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      return res.status(404).json({ message: 'Study plan not found' });
+    }
+    
+    console.log('Current study plan sessions:', studyPlan.sessions.map(s => ({
+      id: s._id,
+      subject: s.subject,
+      status: s.status,
+      progress: s.progress
+    })));
+
+    // Find the session to update
+    const sessionIndex = studyPlan.sessions.findIndex(
+      session => session._id.toString() === sessionId
+    );
+
+    if (sessionIndex === -1) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // Get the current session
+    const currentSession = studyPlan.sessions[sessionIndex];
+    
+    // Update only the specific fields that are provided
+    if (subject) currentSession.subject = subject;
+    if (startTime) currentSession.startTime = startTime;
+    if (endTime) currentSession.endTime = endTime;
+    if (description !== undefined) currentSession.description = description;
+    if (progress !== undefined) {
+      currentSession.progress = progress;
+      // Also update status for backward compatibility
+      if (progress === 100) {
+        currentSession.status = 'completed';
+      } else if (progress === 0) {
+        currentSession.status = 'scheduled';
+      }
+    }
+    if (selectedDocument) currentSession.documentId = selectedDocument._id;
+
+    // Ensure all required fields are present
+    console.log('Updated session before save:', {
+      subject: currentSession.subject,
+      startTime: currentSession.startTime,
+      endTime: currentSession.endTime,
+      status: currentSession.status,
+      progress: currentSession.progress
+    });
+    
+    // Update subjects list if new subject
+    if (subject && !studyPlan.subjects.includes(subject)) {
+      studyPlan.subjects.push(subject);
+    }
+
+    await studyPlan.save();
+    
+    console.log('Session updated successfully:', {
+      id: currentSession._id,
+      subject: currentSession.subject,
+      status: currentSession.status,
+      progress: currentSession.progress
+    });
+    
+    res.json(currentSession);
+  } catch (error) {
+    console.error('Error updating study session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete a study session
+router.delete('/:sessionId', auth, async (req, res) => {
+  try {
+    const sessionId = req.params.sessionId;
+    console.log('Attempting to delete session:', sessionId);
+    console.log('User ID:', req.user._id);
+    
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      console.log('Study plan not found for user:', req.user._id);
+      return res.status(404).json({ message: 'Study plan not found' });
+    }
+
+    console.log('Found study plan with sessions count:', studyPlan.sessions.length);
+    console.log('Session IDs in study plan:', studyPlan.sessions.map(s => s._id.toString()));
+
+    // Find the session to delete
+    const sessionIndex = studyPlan.sessions.findIndex(
+      session => session._id.toString() === sessionId
+    );
+
+    console.log('Session index found:', sessionIndex);
+
+    if (sessionIndex === -1) {
+      console.log('Session not found with ID:', sessionId);
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // Get session info before deletion for logging
+    const sessionToDelete = studyPlan.sessions[sessionIndex];
+    console.log('Deleting session:', {
+      id: sessionToDelete._id,
+      subject: sessionToDelete.subject,
+      startTime: sessionToDelete.startTime
+    });
+
+    // Remove session
+    studyPlan.sessions.splice(sessionIndex, 1);
+    await studyPlan.save();
+    
+    console.log('Session deleted successfully. Remaining sessions:', studyPlan.sessions.length);
+    res.json({ message: 'Session deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting study session:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', details: error.message });
+  }
+});
+
+// Create a dummy study session for testing
+router.post('/create-dummy', auth, async (req, res) => {
+  try {
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      studyPlan = new StudyPlan({
+        userId: req.user._id,
+        title: 'My Study Plan',
+        description: 'Weekly study schedule',
+        weeklyGoal: 20,
+        subjects: [],
+        sessions: []
+      });
+    }
+    
+    // Find available subjects from notes
+    const notes = await Note.find({ userId: req.user._id });
+    if (!notes || notes.length === 0) {
+      return res.status(400).json({ 
+        message: 'No subjects available. Please add documents in the Notebook first.' 
+      });
+    }
+    
+    // Get unique subjects
+    const availableSubjects = [...new Set(notes.map(note => note.subject))];
+    console.log('Available subjects for dummy session:', availableSubjects);
+    
+    // Pick the first subject to create a dummy session
+    const subjectForDummy = availableSubjects[0];
+    
+    // Find documents for this subject
+    const subjectDocuments = notes.filter(note => note.subject === subjectForDummy);
+    
+    if (subjectDocuments.length === 0) {
+      return res.status(400).json({ 
+        message: `No documents found for subject: ${subjectForDummy}` 
+      });
+    }
+    
+    // Create start and end times for the dummy session (today, 1 hour)
+    const now = new Date();
+    const startTime = new Date(now);
+    startTime.setHours(startTime.getHours() + 1); // Start 1 hour from now
+    
+    const endTime = new Date(startTime);
+    endTime.setHours(endTime.getHours() + 1); // End 1 hour after start
+    
+    // Create dummy session with reference to the first document
+    const dummySession = {
+      subject: subjectForDummy,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      description: `Dummy study session for testing with ${subjectForDummy}`,
+      status: 'scheduled',
+      documentId: subjectDocuments[0]._id
+    };
+    
+    // Add to study plan
+    studyPlan.sessions.push(dummySession);
+    
+    // Update subjects list if new
+    if (!studyPlan.subjects.includes(subjectForDummy)) {
+      studyPlan.subjects.push(subjectForDummy);
+    }
+    
+    await studyPlan.save();
+    
+    // Return the created dummy session with its document
+    const createdSession = studyPlan.sessions[studyPlan.sessions.length - 1];
+    const documentInfo = {
+      id: subjectDocuments[0]._id,
+      title: subjectDocuments[0].title,
+      fileUrl: subjectDocuments[0].fileUrl ? 
+        subjectDocuments[0].fileUrl.replace('http://', 'https://') : null,
+      type: subjectDocuments[0].fileUrl ? 
+        subjectDocuments[0].fileUrl.split('.').pop() : 'unknown'
+    };
+    
+    res.status(201).json({
+      session: createdSession,
+      document: documentInfo,
+      message: `Dummy session created with subject: ${subjectForDummy}`
+    });
+    
+  } catch (error) {
+    console.error('Error creating dummy study session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Bulk delete sessions from specific months (for cleaning up test data)
+router.delete('/bulk/cleanup-test-sessions', auth, async (req, res) => {
+  try {
+    console.log('Attempting to bulk delete test sessions from Jan-Mar 2025');
+    console.log('User ID:', req.user._id);
+    
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      console.log('Study plan not found for user:', req.user._id);
+      return res.status(404).json({ message: 'Study plan not found' });
+    }
+
+    console.log('Found study plan with sessions count:', studyPlan.sessions.length);
+    
+    // Define date range for January, February, and March 2025
+    const startDate = new Date('2025-01-01T00:00:00.000Z');
+    const endDate = new Date('2025-03-31T23:59:59.999Z');
+    
+    console.log('Deleting sessions between:', startDate, 'and', endDate);
+    
+    // Filter sessions to keep (those outside the date range)
+    const sessionsToKeep = studyPlan.sessions.filter(session => {
+      const sessionStartTime = new Date(session.startTime);
+      const isInDateRange = sessionStartTime >= startDate && sessionStartTime <= endDate;
+      
+      if (isInDateRange) {
+        console.log('Session to delete:', {
+          id: session._id,
+          subject: session.subject,
+          startTime: session.startTime,
+          isAIGenerated: session.isAIGenerated
+        });
+      }
+      
+      return !isInDateRange; // Keep sessions outside the date range
+    });
+    
+    const deletedCount = studyPlan.sessions.length - sessionsToKeep.length;
+    
+    // Update the study plan with filtered sessions
+    studyPlan.sessions = sessionsToKeep;
+    await studyPlan.save();
+    
+    console.log(`Successfully deleted ${deletedCount} sessions from Jan-Mar 2025`);
+    console.log('Remaining sessions:', studyPlan.sessions.length);
+    
+    res.json({ 
+      message: `Successfully deleted ${deletedCount} sessions from January, February, and March 2025`,
+      deletedCount,
+      remainingSessions: studyPlan.sessions.length
+    });
+  } catch (error) {
+    console.error('Error bulk deleting test sessions:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', details: error.message });
+  }
+});
+
+// Clear all study sessions for the user
+router.delete('/clear-all', auth, async (req, res) => {
+  try {
+    console.log('Attempting to clear all study sessions for user:', req.user._id);
+
+    // Find study plan
+    let studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+    if (!studyPlan) {
+      console.log('Study plan not found for user:', req.user._id);
+      return res.status(404).json({ message: 'Study plan not found' });
+    }
+
+    const sessionCount = studyPlan.sessions.length;
+    console.log(`Found ${sessionCount} sessions to delete`);
+
+    // Clear all sessions
+    studyPlan.sessions = [];
+    await studyPlan.save();
+
+    console.log('Successfully cleared all study sessions');
+
+    res.json({
+      message: `Successfully deleted ${sessionCount} study sessions`,
+      deletedCount: sessionCount
+    });
+  } catch (error) {
+    console.error('Error clearing all study sessions:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', details: error.message });
+  }
+});
+
+module.exports = router; 

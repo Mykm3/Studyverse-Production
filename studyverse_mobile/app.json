@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "studyverse-mobile",
+    "slug": "studyverse-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/Studyverse_Logo.png",
+    "scheme": "testmobileapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.studyverse.mobile",
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/Studyverse_Logo.png",
+        "backgroundColor": "#6366f1"
+      },
+      "package": "com.studyverse.mobile",
+      "edgeToEdgeEnabled": true,
+      "permissions": ["INTERNET"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/Studyverse_Logo.png",
+          "imageWidth": 250,
+          "resizeMode": "contain",
+          "backgroundColor": "#faf8ff"
+        }
+      ],
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "757fe8a0-e093-44d4-8cca-014c607799c7"
+      }
+    }
+  }
+}

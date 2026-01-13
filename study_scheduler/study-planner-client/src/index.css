@@ -1,0 +1,940 @@
+@import "tailwindcss";
+
+/* Custom styles */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+  
+  /* Add smooth scrolling for entire page */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-all duration-300 transform hover:scale-[1.02];
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 hover:shadow-sm;
+  }
+  
+  .input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6 transition-all duration-300 hover:shadow-lg;
+  }
+}
+
+:root {
+  /* Vibrant Light mode colors */
+  --background-color: #ffffff;
+  --foreground-color: #1e293b;
+  --card-background: #ffffff;
+  --card-foreground: #1e293b;
+  
+  /* Primary color: Violet (using the existing accent color) */
+  --primary-color: #7c3aed;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary: Soft Teal */
+  --secondary-color: #e9f9fd;
+  --secondary-foreground: #0891b2;
+  
+  /* Accent: Light Purple */
+  --accent-color: #f1ecfe;
+  --accent-foreground: #7c3aed;
+  
+  /* Muted tones with color */
+  --muted-color: #f8f8fc;
+  --muted-foreground: #6366f1;
+  
+  /* Destructive: Vibrant Red */
+  --destructive-color: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  /* Success: Fresh Green */
+  --success-color: #10b981;
+  --success-foreground: #ffffff;
+  
+  /* Warning: Warm Amber */
+  --warning-color: #f59e0b;
+  --warning-foreground: #ffffff;
+  
+  /* Border and inputs with subtle color */
+  --border-color: #e2d9fc;
+  --input-color: #f0ecfe;
+  --ring-color: #7c3aed;
+  --radius: 0.5rem;
+  
+  /* Gradient colors */
+  --gradient-start: #7c3aed;
+  --gradient-end: #9333ea;
+  
+  /* PDF.js Express styles */
+  --pdfjs-primary-color: var(--primary-color, #3f67e0);
+  --pdfjs-border-color: var(--border, #e2e8f0);
+}
+
+.dark {
+  /* Vibrant Dark mode colors */
+  --background-color: #0f172a;
+  --foreground-color: #f8fafc;
+  --card-background: #1e293b;
+  --card-foreground: #f8fafc;
+  
+  /* Primary: Violet (using existing values) */
+  --primary-color: #8b5cf6;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary: Dark Teal */
+  --secondary-color: #134e4a;
+  --secondary-foreground: #99f6e4;
+  
+  /* Accent: Bright Purple */
+  --accent-color: #6d28d9;
+  --accent-foreground: #ddd6fe;
+  
+  /* Muted tones with color */
+  --muted-color: #334155;
+  --muted-foreground: #a5b4fc;
+  
+  /* Destructive: Glowing Red */
+  --destructive-color: #f87171;
+  --destructive-foreground: #ffffff;
+  
+  /* Success: Neon Green */
+  --success-color: #34d399;
+  --success-foreground: #022c22;
+  
+  /* Warning: Rich Amber */
+  --warning-color: #fbbf24;
+  --warning-foreground: #78350f;
+  
+  /* Border and inputs with character */
+  --border-color: #4c1d95;
+  --input-color: #4c1d95;
+  --ring-color: #8b5cf6;
+  
+  /* Gradient colors */
+  --gradient-start: #8b5cf6;
+  --gradient-end: #6d28d9;
+}
+
+/* Apply the variables to elements */
+body {
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  transition: background-color 0.5s ease, color 0.5s ease;
+  min-height: 100vh;
+}
+
+.bg-card {
+  background-color: var(--card-background);
+}
+
+.text-card-foreground {
+  color: var(--card-foreground);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.bg-primary\/10 {
+  background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
+.bg-primary\/20 {
+  background-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.text-primary-foreground {
+  color: var(--primary-foreground);
+}
+
+.bg-secondary {
+  background-color: var(--secondary-color);
+}
+
+.text-secondary-foreground {
+  color: var(--secondary-foreground);
+}
+
+.bg-accent {
+  background-color: var(--accent-color);
+}
+
+.text-accent-foreground {
+  color: var(--accent-foreground);
+}
+
+.bg-muted {
+  background-color: var(--muted-color);
+}
+
+.text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.bg-destructive {
+  background-color: var(--destructive-color);
+}
+
+.text-destructive {
+  color: var(--destructive-color);
+}
+
+.text-destructive-foreground {
+  color: var(--destructive-foreground);
+}
+
+.bg-success {
+  background-color: var(--success-color);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+.text-success-foreground {
+  color: var(--success-foreground);
+}
+
+.bg-warning {
+  background-color: var(--warning-color);
+}
+
+.text-warning {
+  color: var(--warning-color);
+}
+
+.text-warning-foreground {
+  color: var(--warning-foreground);
+}
+
+.border-border {
+  border-color: var(--border-color);
+}
+
+.border {
+  border-color: var(--border-color);
+  border-width: 1px;
+}
+
+.rounded-md {
+  border-radius: 0.375rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Additional utility classes */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Enhanced animation utilities */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Gradient backgrounds */
+.bg-gradient {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Blob animation for background elements */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Custom classes for your app */
+.sidebar {
+  background-color: var(--background-color);
+  border-right: 1px solid var(--border-color);
+  transition: all 0.5s ease;
+}
+
+.card-hover:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.nav-link {
+  color: var(--muted-foreground);
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.nav-link:hover {
+  background-color: rgba(124, 58, 237, 0.06);
+  transform: translateX(4px);
+}
+
+.nav-link.active {
+  background-color: rgba(124, 58, 237, 0.1);
+  color: var(--primary-color);
+  font-weight: 500;
+  border-right: 2px solid var(--primary-color);
+}
+
+/* Card animation effect */
+.card {
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-background);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 15px -5px rgba(124, 58, 237, 0.08), 0 4px 6px -4px rgba(124, 58, 237, 0.04);
+  border-color: var(--primary-color);
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width 1s ease-in-out;
+  background: linear-gradient(to right, var(--primary-color), var(--success-color));
+}
+
+/* Button pulse effect for primary actions */
+.pulse-effect {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+/* Filter utility for blurred elements */
+.filter {
+  filter: var(--tw-filter);
+}
+
+.blur-3xl {
+  --tw-blur: blur(64px);
+  filter: var(--tw-blur);
+}
+
+/* Scale utilities for animations */
+.scale-0 {
+  transform: scale(0);
+}
+
+.scale-95 {
+  transform: scale(.95);
+}
+
+.scale-100 {
+  transform: scale(1);
+}
+
+.scale-150 {
+  transform: scale(1.5);
+}
+
+/* Subtle pulse animation for icons */
+@keyframes pulse-subtle {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Slide in from bottom animation for modals and content */
+@keyframes slide-in-from-bottom-5 {
+  0% {
+    transform: translateY(5%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-in-from-bottom-5 {
+  animation-name: slide-in-from-bottom-5;
+}
+
+/* Modern UI Enhancements */
+.card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.1), 0 4px 6px -2px rgba(124, 58, 237, 0.05);
+  border-color: color-mix(in srgb, var(--primary-color) 30%, transparent);
+}
+
+/* Enhanced Button Styles */
+.bg-primary {
+  background-color: var(--primary-color);
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bg-primary:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 90%, black);
+  box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2), 0 2px 4px -1px rgba(124, 58, 237, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Softer border radius for all containers */
+.rounded-lg {
+  border-radius: 0.75rem;
+}
+
+.rounded-md {
+  border-radius: 0.5rem;
+}
+
+/* Improved input focus states */
+input:focus, 
+select:focus, 
+textarea:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 30%, transparent);
+  border-color: var(--primary-color);
+}
+
+/* Enhanced card content spacing */
+.p-4 {
+  padding: 1.25rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+/* Smooth transitions for all interactive elements */
+button, 
+a, 
+input, 
+select, 
+textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Improved spacing between cards */
+.gap-4 {
+  gap: 1.25rem;
+}
+
+.gap-6 {
+  gap: 1.5rem;
+}
+
+/* Enhanced dark mode text visibility */
+.dark .text-gray-500,
+.dark .text-gray-600,
+.dark .text-gray-700 {
+  color: #a1a1aa; /* Lighter gray for better visibility in dark mode */
+}
+
+/* Improved sidebar/card contrast in dark mode */
+.dark .bg-card {
+  background-color: #1e293b;
+}
+
+.dark .border {
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+/* Better visibility for primary color elements in dark mode */
+.dark .text-primary {
+  color: #a78bfa; /* Lighter violet for better visibility */
+}
+
+/* Enhance hover states for better interaction feedback */
+.hover\:bg-primary\/90:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 90%, black);
+}
+
+/* Improved tooltip and popup styles */
+[role="tooltip"],
+[data-tooltip] {
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background-color: var(--card-background);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+/* File type icons enhancement */
+.text-4xl {
+  font-size: 2.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Improve table styling */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+th {
+  background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+td, th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+tr:not(:last-child) td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Additional UI Enhancements */
+
+/* Subtle background gradient in light mode - replaced with solid white */
+body {
+  background-color: var(--background-color);
+  min-height: 100vh;
+}
+
+/* Enhanced card backgrounds - simplified to solid white in light mode */
+.bg-card {
+  background-color: var(--card-background);
+}
+
+/* Improved contrast for headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground-color);
+  font-weight: 600;
+}
+
+/* Subtle hover animations for interactive elements */
+.interactive-element {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.1), 0 2px 4px -1px rgba(124, 58, 237, 0.06);
+}
+
+/* Violet focus ring for interactive elements */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Subtle border effects for cards */
+.border-subtle {
+  border: 1px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+  transition: border-color 0.2s ease;
+}
+
+.border-subtle:hover {
+  border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+}
+
+/* Improved scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-color);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary-color) 30%, transparent);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--primary-color) 50%, transparent);
+}
+
+/* Enhanced upload area styling for white background */
+.upload-area {
+  border: 2px dashed rgba(124, 58, 237, 0.2);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  background-color: rgba(124, 58, 237, 0.02);
+}
+
+.upload-area:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(124, 58, 237, 0.05);
+}
+
+/* Improved file card styling */
+.file-card {
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-background);
+}
+
+.file-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px -3px rgba(124, 58, 237, 0.08), 0 4px 6px -2px rgba(124, 58, 237, 0.04);
+}
+
+/* Better visibility for subject tags */
+.subject-tag {
+  background-color: rgba(124, 58, 237, 0.08);
+  color: var(--primary-color);
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.subject-tag:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+}
+
+/* Enhanced modal styling for white background */
+.modal-content {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  background-color: var(--background-color);
+  box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Improved button focus states */
+button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+/* Card styles for colored backgrounds */
+.bg-gradient *,
+.bg-primary *,
+.bg-warning *,
+.bg-success *,
+.bg-accent * {
+  color: white;
+}
+
+.bg-gradient .text-2xl,
+.bg-primary .text-2xl,
+.bg-warning .text-2xl,
+.bg-success .text-2xl,
+.bg-accent .text-2xl,
+.bg-gradient .text-3xl,
+.bg-primary .text-3xl,
+.bg-warning .text-3xl,
+.bg-success .text-3xl,
+.bg-accent .text-3xl,
+.bg-gradient .text-4xl,
+.bg-primary .text-4xl,
+.bg-warning .text-4xl,
+.bg-success .text-4xl,
+.bg-accent .text-4xl,
+.bg-gradient .text-5xl,
+.bg-primary .text-5xl,
+.bg-warning .text-5xl,
+.bg-success .text-5xl,
+.bg-accent .text-5xl {
+  color: white;
+  font-weight: 700;
+}
+
+.bg-gradient h1,
+.bg-primary h1,
+.bg-warning h1,
+.bg-success h1,
+.bg-accent h1,
+.bg-gradient h2,
+.bg-primary h2,
+.bg-warning h2,
+.bg-success h2,
+.bg-accent h2,
+.bg-gradient h3,
+.bg-primary h3,
+.bg-warning h3,
+.bg-success h3,
+.bg-accent h3 {
+  color: white;
+}
+
+/* Achievement card text styles */
+.bg-gradient .font-bold,
+.bg-primary .font-bold,
+.bg-warning .font-bold,
+.bg-success .font-bold,
+.bg-accent .font-bold {
+  color: white;
+}
+
+/* Override for muted text in colored backgrounds */
+.bg-gradient .text-gray-500,
+.bg-primary .text-gray-500,
+.bg-warning .text-gray-500,
+.bg-success .text-gray-500,
+.bg-accent .text-gray-500,
+.bg-gradient .text-muted-foreground,
+.bg-primary .text-muted-foreground,
+.bg-warning .text-muted-foreground,
+.bg-success .text-muted-foreground,
+.bg-accent .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Add styles for PDF.js Express viewer */
+.webviewer {
+  height: 100%;
+  width: 100%;
+}
+
+.webviewer-container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the iframe container takes full height */
+.iframe-container {
+  flex-grow: 1;
+  position: relative;
+  height: 100%;
+}
+
+/* Fix for Safari to ensure proper height of the viewer */
+@supports (-webkit-touch-callout: none) {
+  .webviewer {
+    height: -webkit-fill-available;
+  }
+}
+
+/* StudySession page scroll lock and PDF scroll area */
+.study-session-scroll-lock {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  position: relative;
+}
+
+.pdf-scroll-area {
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  /* Optional: add a background for clarity */
+  background: var(--background-color);
+}
+
+/* Ensure PDF components don't exceed viewport */
+.react-pdf__Document {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+}
+
+.react-pdf__Page {
+  max-height: calc(100vh - 200px) !important;
+  overflow: hidden !important;
+}
+
+.react-pdf__Page__canvas {
+  max-height: calc(100vh - 200px) !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* Ensure document viewer containers don't exceed viewport */
+.document-viewer-container {
+  height: 100% !important;
+  max-height: calc(100vh - 120px) !important;
+  overflow: hidden !important;
+}
+
+/* Fix for study session page layout */
+.study-session-layout {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* AI Assistant scrollable areas */
+.ai-assistant-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+  max-height: calc(100vh - 300px) !important;
+  overflow-y: auto !important;
+}
+
+.ai-assistant-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-assistant-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-assistant-scroll::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 3px;
+}
+
+.ai-assistant-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.5);
+}
+
+/* Force AI Assistant content to stay within bounds */
+.ai-assistant-content {
+  height: 100% !important;
+  max-height: calc(100vh - 200px) !important;
+  overflow: hidden !important;
+}
+
+.ai-assistant-tab-content {
+  max-height: calc(100vh - 300px) !important;
+  overflow-y: auto !important;
+}
+
