@@ -163,6 +163,7 @@ app.use(cors({
     const currentIP = getCurrentIP();
     const allowedOrigins = [
       process.env.CLIENT_URL || 'http://localhost:5173',
+      'https://studyverse-production.onrender.com',
       'http://localhost:8081',
       `http://${currentIP}:8081`,
       `exp://${currentIP}:8081`,

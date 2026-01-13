@@ -26,7 +26,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://studyverse-backend-cxor.onrender.com',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
